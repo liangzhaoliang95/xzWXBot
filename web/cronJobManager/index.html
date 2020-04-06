@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>定时任务管理</title>
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/base.js"></script>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/bootstrap-switch/4.0.0-alpha.1/js/bootstrap-switch.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap-switch/4.0.0-alpha.1/css/bootstrap-switch.min.css" rel="stylesheet">
+    <style>
+        th{
+            text-align: center;
+        }
+        td {
+            text-align: center;
+            margin: 0 auto;
+            font-size: large;
+        }
+        input {
+            text-align: center;
+            border: #2e6da4;
+        }
+    </style>
+    <script>
+        function updateCronJob(id) {
+            let name = $(`#${id}_name`).val()
+            let funcName = $(`#${id}_funcName`).val()
+            let cron = $(`#${id}_cron`).val()
+            let desc = $(`#${id}_desc`).val()
+            let enable =  $(`input[type=checkbox][name=${id}_enable]:checked`).val()
+            let private = $(`input[type=checkbox][name=${id}_private]:checked`).val()
+            enable = enable == "on" ? true : false
+            private = private == "on" ? true : false
+            HYIP.ajax("/cronJob/updateCronJob",{name,funcName,cron,desc,enable,private,_id:id},function () {
+                alert("更新成功")
+
+            })
+        }
+        
+        function createTable(result,chooseNum) {
+            //渲染分页条
+            let total = result.total;
+            $("#page").html(createPage(total,chooseNum))
+            //渲染当前页面数据
+            var obj = result.list;
+            var str = "";
+            for (let i = 0; i < obj.length; i++) {
+                let cronJobInfo = obj[i]
+                str += `<tr id=${cronJobInfo._id}>`;
+                str = str + `<td><input type="text" id="${cronJobInfo._id}_name" value="${cronJobInfo.name}"></td>`;
+                str = str + `<td><input type="text" id="${cronJobInfo._id}_funcName" value="${cronJobInfo.funcName}"></td>`;
+                str = str + `<td><input type="text" id="${cronJobInfo._id}_cron" value="${cronJobInfo.cron}"></td>`;
+                str = str + `<td><input type="text" id="${cronJobInfo._id}_desc" value="${cronJobInfo.desc}"></td>`;
+                str += `<td><input type="checkbox" name=${cronJobInfo._id}_private ${cronJobInfo.private?"checked":""}></td>`
+                str += `<td><input type="checkbox" name=${cronJobInfo._id}_enable ${cronJobInfo.enable?"checked":""}></td>`
+                str += `<td><a href="#"><button class='btn bg-info' onclick="updateCronJob('${cronJobInfo._id}')">更新</button></a></td>`
+                str = str + "</tr>"
+            }
+            $("#districtInfo").html(str)
+            for (let i = 0; i <obj.length ; i++) {
+                let cronJobInfo = obj[i]
+                $(`[name=${cronJobInfo._id}_enable]`).bootstrapSwitch({    //初始化按钮
+                    onText:"Yes",
+                    offText:"No",
+                    onColor:"success",
+                    offColor:"info",
+                });
+                $(`[name=${cronJobInfo._id}_private]`).bootstrapSwitch({    //初始化按钮
+                    onText:"Yes",
+                    offText:"No",
+                    onColor:"success",
+                    offColor:"info",
+                });
+            }
+        }
+
+        function pageInfos(pageNum) {
+            let searchWord = $("#search").val();
+            pageNum = pageNum || 0;
+            HYIP.ajax("/cronJob/getAllCronJob", {searchWord: searchWord,pageNum: pageNum, pageSize: pageSize}, function (result) {
+                createTable(result,pageNum)
+            });
+        }
+        function showCronJob() {
+            $('[name="newPrivate"]').bootstrapSwitch({    //初始化按钮
+                onText:"Yes",
+                offText:"No",
+                onColor:"success",
+                offColor:"info",
+            });
+            $('[name="newEnable"]').bootstrapSwitch({    //初始化按钮
+                onText:"Yes",
+                offText:"No",
+                onColor:"success",
+                offColor:"info",
+            });
+            $('#newCronJob').modal('show')
+        }
+        function newCronJob() {
+            let name = $("#newName").val()
+            let cron = $("#newCron").val()
+            let desc = $("#newDesc").val()
+            let funcName = $("#newFuncName").val()
+            let enable = $("input[type=checkbox][name=newEnable]:checked").val()
+            let private = $("input[type=checkbox][name=newPrivate]:checked").val()
+            enable = enable == "on" ? true : false;
+            private = private == "on" ? true : false;
+            HYIP.ajax("/cronJob/newCronJob",{name,funcName,cron,desc,enable,private},function (rs) {
+                alert("新建成功")
+            })
+        }
+    </script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <h3 class="text-center">
+                定时任务管理
+            </h3>
+            <br>
+            <div style="text-align: center">
+                <a href="#"><button  class="btn bg-info" onclick="pageInfos(0)">首页</button></a>
+                <a href="#"><button class="btn bg-info" onclick="showCronJob()">新建任务</button></a>
+                <a href="../enter.html"><button class="btn bg-info">返回功能选择</button></a>
+            </div>
+            <br>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>
+                        任务名称
+                    </th>
+                    <th>
+                        函数名称
+                    </th>
+                    <th>
+                        定时表达
+                    </th>
+                    <th>
+                        任务描述
+                    </th>
+                    <th>
+                        是否私有
+                    </th>
+                    <th>
+                        是否启用
+                    </th>
+                    <th>
+                        操作
+                    </th>
+                </tr>
+                </thead>
+                <tbody id="districtInfo">
+                </tbody>
+
+            </table>
+            <div id="page" style="text-align: center"></div>
+        </div>
+    </div>
+</div>
+<div  class="modal fade" id="newCronJob" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>任务名称</label>
+                    <input type="text" class="form-control" name="text" id="newName" placeholder="任务名称">
+                </div>
+                <div class="form-group">
+                    <label>函数名称</label>
+                    <input type="text" class="form-control" name="text" id="newFuncName" placeholder="函数名称">
+                </div>
+                <div class="form-group">
+                    <label>任务描述</label>
+                    <input type="text" class="form-control" name="text" id="newDesc" placeholder="任务描述">
+                </div>
+                <div class="form-group">
+                    <label>定时表达式</label>
+                    <input type="text" class="form-control" name="text" id="newCron" placeholder="定时表达式">
+                </div>
+                <div class="form-group">
+                    <label>是否私有</label>
+                    <input type="checkbox" name="newPrivate" checked></div>
+                <div class="form-group">
+                    <label>是否开启</label>
+                    <input type="checkbox" name="newEnable" checked></div>
+                <button class="btn btn-success" onclick="newCronJob()">新建任务</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    pageInfos(0)
+</script>
+</html>

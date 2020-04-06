@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>好友信息配置</title>
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/base.js"></script>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/bootstrap-switch/4.0.0-alpha.1/js/bootstrap-switch.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap-switch/4.0.0-alpha.1/css/bootstrap-switch.min.css" rel="stylesheet">
+    <style>
+        th {
+            text-align: center;
+        }
+
+        td {
+            text-align: center;
+            margin: 0 auto;
+            font-size: x-large;
+        }
+
+    </style>
+    <script>
+        function createTable(result, chooseNum) {
+            //渲染分页条
+            let total = result.total;
+            $("#page").html(createPage(total,chooseNum))
+            //渲染当前页面数据
+            let obj = result.list;
+            let str = "";
+            for (let i = 0; i < obj.length; i++) {
+                let userInfo = obj[i]
+                str += `<tr id=${userInfo.wxId}>`;
+                str = str + `<td><img src="${userInfo.avatar}" width="50px" alt=""></td>`;
+                str = str + `<td>${userInfo.wxId}</td>`;
+                str = str + `<td>${userInfo.name}</td>`;
+                str = str + `<td>${userInfo.alias}</td>`;
+                str += `<td><input type="checkbox" name="my-checkbox" id=${userInfo._id} ${userInfo.enable ? "checked" : ""}></td>`
+                str += `<td><a href="./config.html?wxId=${userInfo.wxId}"><button class='btn bg-info'>配置</button></a></td>`
+                str = str + "</tr>"
+            }
+            $("#districtInfo").html(str)
+            $('[name="my-checkbox"]').bootstrapSwitch({    //初始化按钮
+                onText: "Yes",
+                offText: "No",
+                onColor: "success",
+                offColor: "info",
+                onSwitchChange:function(event,state){
+                    if(state==true){
+                        HYIP.ajax("/friend/updateFriend",{enable:true,_id:event.target.id},function () {
+
+                        })
+                    }else{
+                        HYIP.ajax("/friend/updateFriend",{enable:false,_id:event.target.id},function () {
+
+                        })
+                    }
+                }
+            });
+        }
+
+        function pageInfos(pageNum) {
+            var searchWord = $("#search").val();
+            pageNum = pageNum || 0;
+            HYIP.ajax("/friend/getAllFriend", {
+                searchWord: searchWord,
+                pageNum: pageNum,
+                pageSize: pageSize
+            }, function (result) {
+                createTable(result, pageNum)
+            });
+
+        }
+    </script>
+</head>
+<body>
+
+
+<div class="container-fluid">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <h3 class="text-center">
+                微信好友管理
+            </h3>
+            <br>
+            <div style="text-align: center">
+                微信昵称:<input id="search" type="text">
+                <a href="#"><button class="btn bg-info" onclick="pageInfos(0)">搜索</button></a>
+                <a href="index.html">
+                    <button class="btn bg-info">首页</button>
+                </a>
+            </div>
+            <br>
+            <div style="text-align: center">
+                <a href="../enter.html">
+                    <button class="btn bg-info">返回功能选择</button>
+                </a>
+            </div>
+            <br>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>
+                        微信头像
+                    </th>
+                    <th>
+                        微信ID
+                    </th>
+                    <th>
+                        微信昵称
+                    </th>
+                    <th>
+                        微信备注
+                    </th>
+                    <th>
+                        启用机器人
+                    </th>
+                    <th>
+                        操作
+                    </th>
+                </tr>
+                </thead>
+                <tbody id="districtInfo">
+                </tbody>
+
+            </table>
+            <div id="page" style="text-align: center"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    pageInfos(0)
+</script>
+</html>

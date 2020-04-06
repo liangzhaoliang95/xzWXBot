@@ -1,0 +1,6 @@
+# Created by .ignore support plugin (hsz.mobi)
+test
+node_modules
+package-lock.json
+.idea
+pm2temp.config.js
